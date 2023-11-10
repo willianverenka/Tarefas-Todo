@@ -168,3 +168,40 @@ int alterarTarefas(struct estadoPrograma *state){
     printf("Alteracoes feitas com sucesso!\n");
     return OK;
 }
+
+struct tarefa* filtrarTarefas(struct estadoPrograma *state, enum filtro filtro, void* escolha){
+    int contarOperacoes = 1;
+    if(state->tamanho == 0){
+        return ERRO;
+    }
+    struct tarefa* listaTarefas = NULL;//(struct tarefa*) malloc(0 * sizeof(struct tarefa));
+    switch(filtro){
+        case PRIORIDADE:
+            for(int i = 0; i < state->tamanho; i++){
+                if(state->memoria[i].prioridade == escolha){
+                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
+                    listaTarefas[contarOperacoes] = state->memoria[i];
+                    ++contarOperacoes;
+                }
+            }
+        case ESTADO:
+            for(int i = 0; i < state->tamanho; i++){
+                if(state->memoria[i].estadoTarefa == escolha){
+                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
+                    listaTarefas[contarOperacoes] = state->memoria[i];
+                    ++contarOperacoes;
+                }
+            }
+        case CATEGORIA:
+            for(int i = 0; i < state->tamanho; i++){
+                if(strcmp(escolha, state->memoria[i].categoria) == 0){
+                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
+                    listaTarefas[contarOperacoes] = state->memoria[i];
+                    ++contarOperacoes;
+                }
+            }
+    }
+    for(int i = 0; i < contarOperacoes; i++){
+        print(listaTarefas[i]);
+    }
+}

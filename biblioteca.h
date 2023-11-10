@@ -5,6 +5,12 @@
 #ifndef PROJETO_TAREFAS_BIBLIOTECA_H
 #define PROJETO_TAREFAS_BIBLIOTECA_H
 
+enum filtro{
+    PRIORIDADE,
+    ESTADO,
+    CATEGORIA
+};
+
 enum estadoLoop{
     FUNCIONANDO,
     FECHADO
@@ -42,5 +48,6 @@ int salvar(struct estadoPrograma state);
 int listarTarefas(struct estadoPrograma *state);
 int deletarTarefa(struct estadoPrograma *state, int index);
 void input(char entrada[], char *saida);
+struct tarefa* filtrarTarefas(struct estadoPrograma *state, enum filtro filtro, void* escolha);
 
 #endif //PROJETO_TAREFAS_BIBLIOTECA_H
