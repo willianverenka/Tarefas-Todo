@@ -27,7 +27,7 @@ int main() {
     int resultado;
     while(state.loop == FUNCIONANDO){
         menu();
-        scanf_s(" %c", &input);
+        scanf(" %c", &input);
         getchar();
         switch(input){
             case '1':
@@ -85,6 +85,42 @@ int main() {
             case '5':
                 alterarTarefas(&state);
                 break;
+            case '6':
+            enum filtro filtro;
+                int escolha;
+                do{
+                    printf("Por qual propriedade deseja filtrar a lista?\n");
+                    printf("1. Prioridade 2. Estado 3. Categoria\n");
+                    scanf("%d", &escolha);
+                }while(escolha < 1 || escolha > 3);
+                switch(escolha){
+                    case 1:
+                        int prioridade;
+                        do{
+                            printf("Qual prioridade deseja filtrar? (1-10)\n");
+                            scanf("%d", &prioridade);
+                        }while(prioridade < 1 || prioridade > 10);
+                        filtrarTarefas(&state, PRIORIDADE, prioridade);
+                        break;
+                    case 2:
+                        enum estadoTarefa estado;
+                        int estadoInt;
+                        do{
+                            printf("Qual estado deseja filtrar?\n");
+                            printf("1. Nao iniciado 2. Completo 3. Andamento");
+                            scanf("%d", &prioridade);
+                        }while(estadoInt < 1 || estadoInt > 3);
+                        estado = estadoInt - 2;
+                        filtrarTarefas(&state, ESTADO, estado);
+                        break;
+                    case 3:
+                        char categoria[100];
+                        printf("Qual categoria deseja filtrar?\n");
+                        filtrarTarefas(&state, ESTADO, categoria);
+                        break;
+                }
+                filtro = escolha;
+                filtrarTarefas(&state);
             default:
                 printf("Entrada invalida.\n");
                 break;
