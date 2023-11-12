@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "biblioteca.h"
 #include <string.h>
-
+#include <stdlib.h>
 
 void menu(){
     printf("1. Cadastrar tarefa\n");
@@ -169,39 +169,42 @@ int alterarTarefas(struct estadoPrograma *state){
     return OK;
 }
 
-struct tarefa* filtrarTarefas(struct estadoPrograma *state, enum filtro filtro, void* escolha){
-    int contarOperacoes = 1;
+struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro filtro, void *valorFiltro){
+    struct tarefa *tarefas = state->memoria;
     if(state->tamanho == 0){
-        return ERRO;
+        return NULL;
     }
-    struct tarefa* listaTarefas = NULL;//(struct tarefa*) malloc(0 * sizeof(struct tarefa));
+    struct tarefa *tarefasFiltradas = malloc(sizeof(struct tarefa) * state->tamanho);
+    int tamanhoFiltrado = 0;
     switch(filtro){
         case PRIORIDADE:
             for(int i = 0; i < state->tamanho; i++){
-                if(state->memoria[i].prioridade == escolha){
-                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
-                    listaTarefas[contarOperacoes] = state->memoria[i];
-                    ++contarOperacoes;
+                if(tarefas[i].prioridade == *(int *)valorFiltro){
+                    tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
+                    tamanhoFiltrado++;
                 }
             }
+            break;
         case ESTADO:
             for(int i = 0; i < state->tamanho; i++){
-                if(state->memoria[i].estadoTarefa == escolha){
-                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
-                    listaTarefas[contarOperacoes] = state->memoria[i];
-                    ++contarOperacoes;
+                if(tarefas[i].estadoTarefa == *(int *)valorFiltro){
+                    tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
+                    tamanhoFiltrado++;
                 }
             }
+            break;
         case CATEGORIA:
             for(int i = 0; i < state->tamanho; i++){
-                if(strcmp(escolha, state->memoria[i].categoria) == 0){
-                    listaTarefas = realloc(contarOperacoes * sizeof(struct tarefa));
-                    listaTarefas[contarOperacoes] = state->memoria[i];
-                    ++contarOperacoes;
+                if(strcmp(tarefas[i].categoria, (char *)valorFiltro) == 0){
+                    tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
+                    tamanhoFiltrado++;
                 }
             }
+            break;
     }
-    for(int i = 0; i < contarOperacoes; i++){
-        print(listaTarefas[i]);
+    if(tamanhoFiltrado == 0){
+        printf("Nao foram encontradas tarefas com esse filtro.\n");
+        return NULL;
     }
+    return tarefasFiltradas;
 }
