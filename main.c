@@ -14,7 +14,7 @@ int main() {
         fclose(f);
     }
     else{
-        fclose(f);
+        //fclose(f);
         f = fopen("dados.bin", "wb");
         int t = 0;
         fwrite(&t, sizeof(int), 1, f);
@@ -86,8 +86,9 @@ int main() {
                 alterarTarefas(&state);
                 break;
             case '6':
-            enum filtro filtro;
+                enum filtro filtro;
                 int escolha;
+                void *ptr;
                 do{
                     printf("Por qual propriedade deseja filtrar a lista?\n");
                     printf("1. Prioridade 2. Estado 3. Categoria\n");
@@ -99,8 +100,14 @@ int main() {
                         do{
                             printf("Qual prioridade deseja filtrar? (1-10)\n");
                             scanf("%d", &prioridade);
-                        }while(prioridade < 1 || prioridade > 10);
-                        filtrarTarefas(&state, PRIORIDADE, prioridade);
+                        } while (prioridade < 1 || prioridade > 10);
+                        ptr = &prioridade;
+                        filtro = PRIORIDADE;
+                        struct tarefa* tarefas = buscarTarefasPorFiltro(&state, filtro, ptr); // retorna um ponteiro para a array de tarefas filtrada
+                        if(tarefas == NULL){
+                            printf("Nao ha tarefas com essa prioridade.\n");
+                            break;
+                        }
                         break;
                     case 2:
                         enum estadoTarefa estado;
@@ -108,19 +115,23 @@ int main() {
                         do{
                             printf("Qual estado deseja filtrar?\n");
                             printf("1. Nao iniciado 2. Completo 3. Andamento");
-                            scanf("%d", &prioridade);
+                            scanf("%d", &estadoInt);
                         }while(estadoInt < 1 || estadoInt > 3);
                         estado = estadoInt - 2;
-                        filtrarTarefas(&state, ESTADO, estado);
+                        ptr = &estado;
+                        filtro = ESTADO;
+                        buscarTarefasPorFiltro(&state, filtro, ptr);
                         break;
                     case 3:
                         char categoria[100];
                         printf("Qual categoria deseja filtrar?\n");
-                        filtrarTarefas(&state, ESTADO, categoria);
+                        scanf("%s", categoria);
+                        ptr = &categoria;
+                        filtro = CATEGORIA;
+                        buscarTarefasPorFiltro(&state, filtro, ptr);
                         break;
                 }
-                filtro = escolha;
-                filtrarTarefas(&state);
+                break;
             default:
                 printf("Entrada invalida.\n");
                 break;

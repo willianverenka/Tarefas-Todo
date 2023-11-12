@@ -9,6 +9,7 @@ void menu(){
     printf("3. Listar tarefas\n");
     printf("4. Sair\n");
     printf("5. Editar\n");
+    printf("6. Filtrar tarefas\n");
 };
 
 int buscarTarefa(struct estadoPrograma *state, int escolha){
@@ -23,8 +24,9 @@ int criarTarefa(struct estadoPrograma *state){
         return ERRO;
     struct tarefa novaTarefa;
     int p = 0; // valor da prioridade
-    char c[100]; // vetor p/ categoria
-    char d[300]; // vetor p/ descricao
+    char c[100]; // array p/ categoria
+    char d[300]; // array p/ descricao
+    int e = 0; // valor do estado da tarefa
     do{
         printf("Prioridade da tarefa (1-10):\n");
         scanf("%d", &p);
@@ -34,9 +36,16 @@ int criarTarefa(struct estadoPrograma *state){
     scanf("%299[^\n]%*c", &d);
     printf("Categoria (max 100 caracteres):\n");
     scanf("%99[^\n]%*c", &c);
+    do{
+        printf("Estado da tarefa:\n");
+        printf("1. Nao iniciado 2. Em andamento 3. Completo\n");
+        scanf("%d", &e);
+    }while(e < 1 || e > 3);
+    e -= 2; // para que o valor do enum seja compativel com o input do usuario
     novaTarefa.prioridade = p;
     strcpy(novaTarefa.categoria, c);
     strcpy(novaTarefa.descricao, d);
+    novaTarefa.estadoTarefa = e;
     state->memoria[state->tamanho] = novaTarefa;
     return OK;
 }
@@ -87,6 +96,17 @@ int listarTarefas(struct estadoPrograma *state){
         printf("Prioridade: %d\n", tarefas[i].prioridade);
         printf("Descricao: %s\n", tarefas[i].descricao);
         printf("Categoria: %s\n", tarefas[i].categoria);
+        switch(tarefas[i].estadoTarefa){
+            case NAO_INICIADO:
+                printf("Estado: Nao iniciado\n");
+                break;
+            case ANDAMENTO:
+                printf("Estado: Em andamento\n");
+                break;
+            default:
+                printf("Estado: Completo\n");
+                break;
+        }
     }
     return OK;
 }
@@ -169,11 +189,19 @@ int alterarTarefas(struct estadoPrograma *state){
     return OK;
 }
 
+/* a funcao recebe um ponteiro void para lidar com os diferentes tipos de input (como valores de enum, strings ou inteiros) que
+sao necessarios para realizar a filtragem. Por mais que talvez nao seja uma excelente pratica por ser um parametro com tipo
+generico, vai ajudar a seguir o principio de modularizacao da funcao, uma vez que ela tera responsabilidade unica e podera
+ser utilizada para diferentes contextos (todos os tipos de filtragem). Assim eh possivel descartar a criacao de novas funcoes
+que seriam bem semelhantes, reduz a repeticao de codigo */
+
 struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro filtro, void *valorFiltro){
     struct tarefa *tarefas = state->memoria;
     if(state->tamanho == 0){
         return NULL;
     }
+    /* aloca memoria suficiente para o pior dos casos, que acontece se o parametro da filtragem
+    selecionar todas as tarefas registradas*/
     struct tarefa *tarefasFiltradas = malloc(sizeof(struct tarefa) * state->tamanho);
     int tamanhoFiltrado = 0;
     switch(filtro){
@@ -203,8 +231,12 @@ struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro 
             break;
     }
     if(tamanhoFiltrado == 0){
-        printf("Nao foram encontradas tarefas com esse filtro.\n");
         return NULL;
+    }
+    /* Realoca a memoria da array de structs. Como a array eh iniciada com o tamanho de todas as tarefas carregadas,
+     * o filtro pode retornar menos tarefas, e entao a memoria eh realocada para o tamanho filtrado.*/
+    if(tamanhoFiltrado < state->tamanho){
+        tarefasFiltradas = realloc(tarefasFiltradas, sizeof(struct tarefa) * tamanhoFiltrado);
     }
     return tarefasFiltradas;
 }
