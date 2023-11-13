@@ -7,9 +7,9 @@ void menu(){
     printf("1. Cadastrar tarefa\n");
     printf("2. Excluir tarefa\n");
     printf("3. Listar tarefas\n");
-    printf("4. Sair\n");
-    printf("5. Editar\n");
-    printf("6. Filtrar tarefas\n");
+    printf("4. Editar tarefas\n");
+    printf("5. Filtrar tarefas\n");
+    printf("6. Sair\n");
 };
 
 int buscarTarefa(struct estadoPrograma *state, int escolha){
@@ -45,7 +45,8 @@ int criarTarefa(struct estadoPrograma *state){
     novaTarefa.prioridade = p;
     strcpy(novaTarefa.categoria, c);
     strcpy(novaTarefa.descricao, d);
-    novaTarefa.estadoTarefa = e;
+    enum estadoTarefa estado = e;
+    novaTarefa.estadoTarefa = estado;
     state->memoria[state->tamanho] = novaTarefa;
     return OK;
 }
@@ -195,7 +196,7 @@ generico, vai ajudar a seguir o principio de modularizacao da funcao, uma vez qu
 ser utilizada para diferentes contextos (todos os tipos de filtragem). Assim eh possivel descartar a criacao de novas funcoes
 que seriam bem semelhantes, reduz a repeticao de codigo */
 
-struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro filtro, void *valorFiltro){
+struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro filtro, void *valorFiltro, int *tamanhoFiltragem){
     struct tarefa *tarefas = state->memoria;
     if(state->tamanho == 0){
         return NULL;
@@ -215,7 +216,7 @@ struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro 
             break;
         case ESTADO:
             for(int i = 0; i < state->tamanho; i++){
-                if(tarefas[i].estadoTarefa == *(int *)valorFiltro){
+                if((int)tarefas[i].estadoTarefa == *(int *)valorFiltro){
                     tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
                     tamanhoFiltrado++;
                 }
@@ -224,6 +225,17 @@ struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro 
         case CATEGORIA:
             for(int i = 0; i < state->tamanho; i++){
                 if(strcmp(tarefas[i].categoria, (char *)valorFiltro) == 0){
+                    tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
+                    tamanhoFiltrado++;
+                }
+            }
+            break;
+        case PRIORIDADE_CATEGORIA:
+            char categoria[100];
+            printf("Qual categoria deseja filtrar?\n");
+            scanf("%s", categoria);
+            for(int i = 0; i < state->tamanho; i++){
+                if(tarefas[i].prioridade == *(int *)valorFiltro && strcmp(tarefas[i].categoria, categoria) == 0){
                     tarefasFiltradas[tamanhoFiltrado] = tarefas[i];
                     tamanhoFiltrado++;
                 }
@@ -238,5 +250,43 @@ struct tarefa* buscarTarefasPorFiltro(struct estadoPrograma *state, enum filtro 
     if(tamanhoFiltrado < state->tamanho){
         tarefasFiltradas = realloc(tarefasFiltradas, sizeof(struct tarefa) * tamanhoFiltrado);
     }
+    (*tamanhoFiltragem) = tamanhoFiltrado;
+    qsort(tarefasFiltradas, tamanhoFiltrado, sizeof(struct tarefa), comparar);
     return tarefasFiltradas;
+}
+
+int exportarTarefas(struct tarefa *tarefas, int tamanho){
+    FILE *f = fopen("tarefasExportadas.txt", "w");
+    if(f == NULL){
+        printf("ERRO:\n");
+        printf("Nao foi posivel abrir o arquivo tarefas.txt\n");
+        return ERRO;
+    }
+    if(tamanho == 0)
+        return ERRO;
+    for(int i = 0; i < tamanho; i++){
+        char estadoTarefa[15];
+        switch(tarefas[i].estadoTarefa){
+            case NAO_INICIADO:
+                strcpy(estadoTarefa, "Nao iniciado");
+                break;
+            case ANDAMENTO:
+                strcpy(estadoTarefa, "Em andamento");
+                break;
+            default:
+                strcpy(estadoTarefa, "Completo");
+                break;
+        }
+        fprintf(f, "%d, %s, %s, %s\n", tarefas[i].prioridade, tarefas[i].categoria, estadoTarefa, tarefas[i].descricao);
+    }
+    fclose(f);
+    return OK;
+}
+
+/* funcao utilitaria p/ quicksort, a condicao eh invertida para ordenar do maior para o menor,
+(maior prioridade no topo do arquivo txt)*/
+int comparar(const void *a, const void *b) {
+    struct tarefa *A = (struct tarefa *)a;
+    struct tarefa *B = (struct tarefa *)b;
+    return (B->prioridade - A->prioridade);
 }
