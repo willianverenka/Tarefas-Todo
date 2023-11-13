@@ -14,7 +14,7 @@ int main() {
         fclose(f);
     }
     else{
-        fclose(f);
+        //fclose(f);
         f = fopen("dados.bin", "wb");
         int t = 0;
         fwrite(&t, sizeof(int), 1, f);
@@ -27,12 +27,13 @@ int main() {
     int resultado;
     while(state.loop == FUNCIONANDO){
         menu();
-        scanf_s(" %c", &input);
+        scanf(" %c", &input);
         getchar();
         switch(input){
             case '1':
                 if(criarTarefa(&state) == OK){
                     ++state.tamanho;
+                    printf("Tarefa criada com sucesso.\n");
                 }
                 else{ // a funcao retorna 1 (ERRO) caso existam 100 tarefas
                     printf("ERRO:\nNao ha memoria disponivel.\n");
@@ -63,7 +64,7 @@ int main() {
                 printf("Pressione qualquer tecla pra continuar...\n");
                 getchar();
                 break;
-            case '4':
+            case '6':
                 if(salvar(state) == ERRO){
                     char inputSalvar = '-';
                     do{
@@ -82,8 +83,81 @@ int main() {
                     state.loop = FECHADO;
                     break;
                 }
-            case '5':
+            case '4':
                 alterarTarefas(&state);
+                break;
+            case '5':
+                enum filtro filtro;
+                int escolha;
+                int tamanhoFiltragem;
+                void *ptr;
+                struct tarefa *tarefasFiltradas;
+                char inputExportar;
+                do{
+                    printf("Por qual propriedade deseja filtrar a lista?\n");
+                    printf("1. Prioridade 2. Estado 3. Categoria 4. Prioridade e categoria\n");
+                    scanf("%d", &escolha);
+                }while(escolha < 1 || escolha > 4);
+                switch(escolha){
+                    case 1:
+                        int prioridade;
+                        do{
+                            printf("Qual prioridade deseja filtrar? (1-10)\n");
+                            scanf("%d", &prioridade);
+                        } while (prioridade < 1 || prioridade > 10);
+                        ptr = &prioridade;
+                        filtro = PRIORIDADE;
+                        tarefasFiltradas = buscarTarefasPorFiltro(&state, filtro, ptr, &tamanhoFiltragem); // retorna um ponteiro para a array de tarefas filtrada
+                        break;
+                    case 2:
+                        int estadoInt;
+                        do{
+                            printf("Qual estado deseja filtrar?\n");
+                            printf("1. Nao iniciado 2. Completo 3. Andamento");
+                            scanf("%d", &estadoInt);
+                        }while(estadoInt < 1 || estadoInt > 3);
+                        estadoInt -= 2;
+                        ptr = &estadoInt;
+                        filtro = ESTADO;
+                        printf("estado selecionado: %d\n", estadoInt);
+                        tarefasFiltradas = buscarTarefasPorFiltro(&state, filtro, ptr, &tamanhoFiltragem);
+                        break;
+                    case 3:
+                        char categoria[100];
+                        printf("Qual categoria deseja filtrar?\n");
+                        scanf("%s", categoria);
+                        ptr = &categoria;
+                        filtro = CATEGORIA;
+                        tarefasFiltradas = buscarTarefasPorFiltro(&state, filtro, ptr, &tamanhoFiltragem);
+                        break;
+                    case 4:
+                        int prioridade2;
+                        do{
+                            printf("Qual prioridade deseja filtrar? (1-10)\n");
+                            scanf("%d", &prioridade2);
+                        } while (prioridade2 < 1 || prioridade2 > 10);
+                        ptr = &prioridade2;
+                        filtro = PRIORIDADE_CATEGORIA;
+                        tarefasFiltradas = buscarTarefasPorFiltro(&state, filtro, ptr, &tamanhoFiltragem);
+                        break;
+                }
+                if(tarefasFiltradas == NULL){
+                    printf("Nao ha tarefas que atendam o filtro selecionado.\n");
+                    break;
+                }
+                printf("Deseja exportar as tarefas filtradas? (S/N)\n");
+                scanf(" %c", &inputExportar);
+                if(inputExportar == 'N' || inputExportar == 'n'){
+                    break;
+                }
+                if(exportarTarefas(tarefasFiltradas, tamanhoFiltragem) == ERRO){
+                    printf("Erro ao exportar tarefas.\n");
+                    break;
+                }
+                else{
+                    printf("Tarefas exportadas com sucesso no arquivo tarefasExportadas.txt\n");
+                    break;
+                }
                 break;
             default:
                 printf("Entrada invalida.\n");
